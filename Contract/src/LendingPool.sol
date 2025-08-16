@@ -2,10 +2,16 @@
 pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Pool {
+    address public Collateral;
     uint public totalPoolAmount ;
     uint constant public interestRate = 10;
     uint constant public lendingProfitPercent = 2;
-    uint constant public borrowingPercentAgainstCollateral = 75;
+    // uint constant public borrowingPercentAgainstCollateral = 75;
+
+    //constructor
+    constructor(address _Collateral) {
+       Collateral = _Collateral;
+    }
     //events
     event Deposit(address indexed lender, uint amount);
     event Withdraw(address indexed lender, uint amount);
