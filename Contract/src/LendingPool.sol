@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./CollateralVault.sol";
 contract Pool {
     address public Collateral;
     uint public totalPoolAmount ;
@@ -44,7 +45,8 @@ contract Pool {
     //Borrowers Logic
     function borrow(uint amount , IERC20 token) public {
         require(amount > 0);
-        require(amount <= (borrowersCollateral[msg.sender] / 100)*borrowingPercentAgainstCollateral);
+        uint collateralAmount = CollateralVault(Collateral).getCollateralValue(msg.sender);
+        require(collateralAmount >= amount);
         borrowersBalances[msg.sender] += amount;
         totalPoolAmount += amount;
         token.transfer(msg.sender, amount);
