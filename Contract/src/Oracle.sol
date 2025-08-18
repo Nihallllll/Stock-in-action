@@ -6,7 +6,7 @@ contract Oracle {
     function setPrice(address _token , uint  _price) public {
         tokenPrices[_token] = _price;
     }
-    function getPrice(address _token) public returns(uint){
+    function getPrice(address _token)public  view returns(uint){
         return tokenPrices[_token];
     }
 }
