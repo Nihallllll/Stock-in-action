@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // import "@IPriceOracle.sol";
 contract CollateralVault {
   
-  function getCollateralValue(address lender) public view returns(uint) {
-    return 100;
-  }
+  
   
 }
