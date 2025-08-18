@@ -65,7 +65,7 @@ contract LendingPool {
     function repay(address _token , uint _amount) external{
      require(borrowerBalances[msg.sender]  >= _amount);
      require(_amount != 0);
-    IERC20( _token).safeTransferFrom(msg.sender , address(this) , _amount);
+     IERC20( _token).safeTransferFrom(msg.sender , address(this) , _amount);
      borrowerBalances[msg.sender] -= _amount;
      totalPoolBalance += _amount ;
     }
