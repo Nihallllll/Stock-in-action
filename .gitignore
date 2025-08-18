@@ -1,0 +1,24 @@
+# Solidity / Foundry build artifacts
+out/
+cache/
+forge-cache/
+*.dbg.json
+
+# Node.js dependencies (if using any frontend or scripts with node)
+node_modules/
+
+# Environment files containing secrets
+.env
+
+# VSCode settings folder
+.vscode/
+
+# MacOS system files
+.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
