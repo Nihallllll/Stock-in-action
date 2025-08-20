@@ -1,7 +1,5 @@
-import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createConfig, http, injected } from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
 import { ABIS, CONTRACTS } from './abi';
 import { useAccount, useWriteContract } from 'wagmi';
@@ -33,11 +31,11 @@ function MintButton() {
       await writeContract({
         abi: ABIS.TOKEN_FACTORY,
         functionName: 'createStockToken',
-        args: ["tUSDC"],
+        args: ["tUSDCAB"],
         address: CONTRACTS.TOKEN_FACTORY,
         account: address,
       });
-      alert("Mint success (if you are contract owner)!");
+      alert("Mint success ");
     } catch {
       alert("Mint failed: Not contract owner or other error");
     }
@@ -45,6 +43,8 @@ function MintButton() {
 
   return <button onClick={mintMusdc}>mint musdc</button>;
 }
+
+
 
 function App() {
   return (
