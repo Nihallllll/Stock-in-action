@@ -6,7 +6,7 @@ import { mainnet, sepolia } from 'viem/chains';
 import { ABIS, CONTRACTS } from './abi';
 import { useAccount, useWriteContract } from 'wagmi';
 import '@rainbow-me/rainbowkit/styles.css';
-
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
   getDefaultConfig,
   RainbowKitProvider,
@@ -31,10 +31,10 @@ function MintButton() {
     }
     try {
       await writeContract({
-        abi: ABIS.ERC20,
-        functionName: 'mint',
-        args: [address, BigInt(1000)],
-        address: CONTRACTS.MUSDC,
+        abi: ABIS.TOKEN_FACTORY,
+        functionName: 'createStockToken',
+        args: ["tUSDC"],
+        address: CONTRACTS.TOKEN_FACTORY,
         account: address,
       });
       alert("Mint success (if you are contract owner)!");
@@ -51,6 +51,7 @@ function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
+          <ConnectButton />
         <MintButton />
         </RainbowKitProvider>
       </QueryClientProvider>

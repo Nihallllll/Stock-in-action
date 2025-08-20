@@ -8,7 +8,7 @@ contract Oracle is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    function setPrice(address token, uint256 price) external onlyOwner {
+    function setPrice(address token, uint256 price) external  {
         prices[token] = price;
     }
 

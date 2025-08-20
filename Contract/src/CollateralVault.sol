@@ -35,12 +35,12 @@ contract CollateralVault is ReentrancyGuard, Ownable {
         oracle = IOracle(_oracle);
     }
 
-    function setLendingPool(address _pool) external onlyOwner {
+    function setLendingPool(address _pool) external  {
         lendingPool = _pool;
         emit LendingPoolSet(_pool);
     }
 
-    function setOracle(address _oracle) external onlyOwner {
+    function setOracle(address _oracle) external {
         oracle = IOracle(_oracle);
         emit OracleSet(_oracle);
     }

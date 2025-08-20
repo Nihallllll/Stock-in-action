@@ -11,7 +11,7 @@ contract TokenFactory is Ownable {
     event StockTokenCreated(string indexed symbol, address tokenAddress);
     event StockTokenMinted(string indexed symbol, address indexed to, uint256 amount);
 
-    function createStockToken(string calldata symbol) external onlyOwner returns (address) {
+    function createStockToken(string calldata symbol) external  returns (address) {
         require(bytes(symbol).length > 0, "Empty symbol");
         require(stockTokens[symbol] == address(0), "Token exists");
 
@@ -22,7 +22,7 @@ contract TokenFactory is Ownable {
         return address(token);
     }
 
-    function mintStockToken(string calldata symbol, address to, uint256 amount) external onlyOwner {
+    function mintStockToken(string calldata symbol, address to, uint256 amount) external  {
         address tokenAddr = stockTokens[symbol];
         require(tokenAddr != address(0), "Token not found");
         CustomToken(tokenAddr).mint(to, amount);

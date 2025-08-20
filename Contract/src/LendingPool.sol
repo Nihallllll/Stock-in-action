@@ -34,12 +34,12 @@ contract LendingPool is ReentrancyGuard, Ownable {
         musdc = IERC20(_mUSDC);
     }
 
-    function setCollateralVault(address _vault) external onlyOwner {
+    function setCollateralVault(address _vault) external  {
         collateralVault = _vault;
         emit CollateralVaultSet(_vault);
     }
 
-    function setLTV(uint256 _ltvBps) external onlyOwner {
+    function setLTV(uint256 _ltvBps) external  {
         require(_ltvBps <= 10000, "ltv invalid");
         ltvBps = _ltvBps;
         emit LTVUpdated(_ltvBps);
