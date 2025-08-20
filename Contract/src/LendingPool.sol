@@ -28,7 +28,7 @@ contract LendingPool is ReentrancyGuard, Ownable {
     event Repaid(address indexed borrower, uint256 amount);
     event CollateralVaultSet(address indexed vault);
     event LTVUpdated(uint256 newLtvBps);
-
+ 
     constructor(address _mUSDC)Ownable(msg.sender) {
         require(_mUSDC != address(0), "mUSDC required");
         musdc = IERC20(_mUSDC);
