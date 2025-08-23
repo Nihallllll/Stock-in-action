@@ -12,6 +12,24 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import '@rainbow-me/rainbowkit/styles.css';
+import {
+  ConnectButton,
+  getDefaultConfig,
+  RainbowKitProvider,
+} from '@rainbow-me/rainbowkit';
+import { WagmiProvider } from 'wagmi';
+import {
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  base,
+} from 'wagmi/chains';
+import {
+  QueryClientProvider,
+  QueryClient,
+} from "@tanstack/react-query";
 
 const navigation = [
   { name: 'Home', href: '/', icon: TrendingUp },
@@ -44,7 +62,7 @@ export function Navbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
               <TrendingUp className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">Hedgehog</span>
+            <span className="text-xl font-bold">proof-of-Stocks</span>
           </Link>
 
           {/* Navigation Links */}
@@ -83,7 +101,7 @@ export function Navbar() {
             </div>
 
             {/* Wallet Connection */}
-            {isConnected ? (
+            {/* {isConnected ? (
               <div className="flex items-center space-x-2">
                 <div className="hidden sm:flex flex-col text-right text-xs">
                   <span className="text-muted-foreground">Connected</span>
@@ -107,7 +125,9 @@ export function Navbar() {
                 <Wallet className="h-4 w-4" />
                 <span>Connect Wallet</span>
               </Button>
-            )}
+            )} */}
+            <ConnectButton/>
+            
           </div>
         </div>
       </div>

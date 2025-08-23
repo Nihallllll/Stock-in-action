@@ -13,18 +13,26 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { mainnet, sepolia } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
+import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 // --- Wagmi Config (MetaMask + Sepolia) ---
-const config = createConfig({
-  chains: [sepolia],
-  connectors: [
-    injected(), // MetaMask or any injected wallet
-  ],
-  transports: {
-    [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/W-kXLnkFc5La1OixSfZu5"),
-  },
+// const config = createConfig({
+//   chains: [sepolia],
+//   connectors: [
+//     injected(), // MetaMask or any injected wallet
+//   ],
+//   transports: {
+//     [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/W-kXLnkFc5La1OixSfZu5"),
+//   },
+// });
+
+const config = getDefaultConfig({
+  appName: 'My RainbowKit App',
+  projectId: 'YOUR_PROJECT_ID',
+  chains: [mainnet ,sepolia],
+  ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
 const queryClient = new QueryClient();
@@ -32,6 +40,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <WagmiProvider config={config}>
     <QueryClientProvider client={queryClient}>
+      <RainbowKitProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -49,6 +58,7 @@ const App = () => (
           </Layout>
         </BrowserRouter>
       </TooltipProvider>
+      </RainbowKitProvider>
     </QueryClientProvider>
   </WagmiProvider>
 );

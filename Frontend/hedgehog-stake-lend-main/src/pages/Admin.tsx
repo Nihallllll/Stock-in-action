@@ -68,7 +68,7 @@ export default function Admin() {
          await writeContract({
           abi: ABIS.ERC20,
           functionName: "mint",
-          args: [`0x${faucetToken}`, BigInt(faucetAmount)],
+          args: [address, BigInt(faucetAmount)],
           address: CONTRACTS.MUSDC,
           chain: undefined,
           account: address,

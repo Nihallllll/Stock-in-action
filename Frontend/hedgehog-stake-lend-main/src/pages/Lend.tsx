@@ -24,6 +24,8 @@ export default function Lend() {
   const {address ,isConnected } =useAccount();
   const [lenderDeposite ,setLenderDeposite] =useState(0);
   const {writeContract} =useWriteContract();
+
+  
   async function lenderBalance() {
     const {data  , refetch} = useReadContract({
     address : CONTRACTS.LENDING_POOL,
@@ -34,10 +36,10 @@ export default function Lend() {
   setLenderDeposite(Number(data));
   }
   async function lenderDepositeTx(){
-    const {data } = writeContract({
+    await writeContract({
       abi: ABIS.LENDING_POOL,
-      functionName: "deposite",
-      args: depositAmount ? [depositAmount] : undefined,
+      functionName: "deposit",
+      args: depositAmount ? [CONTRACTS.MUSDC,BigInt(depositAmount)] : undefined,
       address: CONTRACTS.LENDING_POOL,
       chain: undefined,
       account: address,
@@ -192,7 +194,7 @@ export default function Lend() {
                     onChange={(e) => setDepositAmount(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Wallet Balance: 10,000 mUSDC
+                    wallet mUSDC balance : 
                   </p>
                 </div>
                 

@@ -1,0 +1,24 @@
+/* Full page black background */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: rgba(0, 0, 0, 0.986); /* Page background */
+  color: white;           /* Default text color */
+  font-family: sans-serif; /* Optional, for readability */
+}
+
+/* Ensure all text elements inherit white color */
+* {
+  color: inherit;
+}
+
+/* Optional: ensure links are visible */
+a {
+  color: white;
+  text-decoration: underline;
+}
+
+button {
+  color: black;
+}

@@ -812,7 +812,7 @@ export const ABIS = {
 ],
   
   ORACLE: [
-	{ "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+  { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "getPrice",
@@ -896,7 +896,7 @@ export const ABIS = {
       ]
     }],
   TOKEN_FACTORY: [ 
-	 { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+   { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "createStockToken",
@@ -1235,14 +1235,14 @@ export const ABIS = {
 
 // Mock synthetic stock tokens
 export const SYNTHETIC_STOCKS = [
-  { symbol: 'tAAPL', name: 'Tokenized Apple', address: '0x1111111111111111111111111111111111111111' },
-  { symbol: 'tTSLA', name: 'Tokenized Tesla', address: '0x2222222222222222222222222222222222222222' },
-  { symbol: 'tGOOGL', name: 'Tokenized Google', address: '0x3333333333333333333333333333333333333333' },
-  { symbol: 'tMSFT', name: 'Tokenized Microsoft', address: '0x4444444444444444444444444444444444444444' },
-  { symbol: 'tAMZN', name: 'Tokenized Amazon', address: '0x5555555555555555555555555555555555555555' },
-  { symbol: 'tNVDA', name: 'Tokenized NVIDIA', address: '0x6666666666666666666666666666666666666666' },
-  { symbol: 'tNFLX', name: 'Tokenized Netflix', address: '0x7777777777777777777777777777777777777777' },
-  { symbol: 'tCRM', name: 'Tokenized Salesforce', address: '0x8888888888888888888888888888888888888888' },
-  { symbol: 'tADBE', name: 'Tokenized Adobe', address: '0x9999999999999999999999999999999999999999' },
-  { symbol: 'tBA', name: 'Tokenized Boeing', address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+  { symbol: 'tAAPL', name: 'Tokenized Apple', address: '0xA373e1062dE4fbe51B78Ed547D2cD88656C14cB3' ,price :"175"},
+  { symbol: 'tTSLA', name: 'Tokenized Tesla', address: '0x296c565a845BC83bdDc8C143d35B9843DC28e97B' ,price :"250"},
+  { symbol: 'tGOOGL', name: 'Tokenized Google', address: '0x3F38521a29D07895C0673f0C9bc8eF912B38A2bD',price : "140"},
+  { symbol: 'tMSFT', name: 'Tokenized Microsoft', address: '0x7a8979e743ffE1874b6E895C849E1629472072ee', price :"320"},
+  { symbol: 'tAMZN', name: 'Tokenized Amazon', address: '0x8a1Ce60B675cA25e6F331cE173b0fD585426b59a' ,price :"140"},
+  { symbol: 'tNVDA', name: 'Tokenized NVIDIA', address: '0x6FDc72C63B0694BB39E6f7FDCA58Bad758A1e667' ,price :"800"},
+  { symbol: 'tNFLX', name: 'Tokenized Netflix', address: '0x6192D34958d78ee9EC8583fcF53346De47888745' ,price :"450"},
+  { symbol: 'tCRM', name: 'Tokenized Salesforce', address: '0xB361B50510Eea36BC20625bD1a2954B6218cf519',price : "250"},
+  { symbol: 'tADBE', name: 'Tokenized Adobe', address: '0x8f73B88DFb0b6d3F48760c3dAC9bE628a56F217f',price :"500" },
+  { symbol: 'tBA', name: 'Tokenized Boeing', address: '0x191792dF1ccE0D90A232A5F3c6c545FBbc2dc764',price : "220"},
 ] as const;

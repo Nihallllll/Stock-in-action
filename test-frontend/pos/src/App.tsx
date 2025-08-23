@@ -6,13 +6,15 @@ import {
 } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { sepolia } from "viem/chains";
-import { ABIS, CONTRACTS } from "./abi";
+import { ABIS, CONTRACTS, SYNTHETIC_STOCKS } from "./abi";
 import "@rainbow-me/rainbowkit/styles.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { useState, useEffect } from "react";
 import type { Address } from "viem";
-
+import { readContract } from "wagmi/actions";
+import { readContractQueryKey } from "wagmi/query";
+import "./App.css"
 const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
@@ -32,14 +34,18 @@ function AddToken() {
       return;
     }
     try {
-      await writeContract({
+      for (const t of SYNTHETIC_STOCKS){
+        
+        await writeContract({
         abi: ABIS.TOKEN_FACTORY,
         functionName: "createStockToken",
-        args: ["tApple"],
+        args: [t.symbol],
         address: CONTRACTS.TOKEN_FACTORY,
         account: address,
-      });
-      alert("Token created successfully!");
+      });  
+      alert("hora hai");
+      }
+      
     } catch (err) {
       console.error(err);
       alert("Create token failed!");
@@ -263,7 +269,7 @@ function GetCollateral({ tokenAddr }: { tokenAddr?: Address }) {
   return <p>User Collateral : {tokenAmount}</p>;
 }
 
-function SettokenValue({ tokenAddr }: { tokenAddr?: Address }) {
+function SettokenValue() {
   const { address, isConnected } = useAccount();
   const { writeContract } = useWriteContract();
 
@@ -273,13 +279,16 @@ function SettokenValue({ tokenAddr }: { tokenAddr?: Address }) {
       return;
     }
     try {
-      await writeContract({
+      for(const t of SYNTHETIC_STOCKS){
+        await writeContract({
         abi: ABIS.ORACLE,
         functionName: "setPrice",
-        args: [tokenAddr, BigInt(10 * 1e18)],
+        args: [t.address, BigInt( Number(t.price) * 1e18)],
         address: CONTRACTS.ORACLE,
         account: address,
       });
+      }
+      
       alert("set price of tApple to 10 per unit");
     } catch (err) {
       console.error(err);
@@ -317,9 +326,98 @@ function SetCollateralVaultAddress() {
   return <button onClick={handleDeposit}>Set collateral vault address</button>;
 }
 
+function BorrowerPosition(){
+  const [userborrowAmount, setUserborrowAmount] = useState(0);
+  const [totalCollateralValue, setTotalCollateralValue] = useState(0);
+  const {address} =useAccount();
+   const {
+      data: borrowerDebt,
+      refetch: refetchBorrowerDebt,
+    } = useReadContract({
+      abi: ABIS.LENDING_POOL,
+      functionName: "borrowerDebt",
+      args: [address],
+      address: CONTRACTS.LENDING_POOL
+    });
+  
+    
+    const {
+      data: collateralValue,
+      refetch: refetchCollateralValue,
+    } = useReadContract({
+      abi: ABIS.COLLATERAL_VAULT,
+      functionName: "getCollateralValue",
+      args: [address],
+      address: CONTRACTS.COLLATERAL_VAULT
+    });
+    
+    
+    useEffect(() => {
+      if (borrowerDebt !== undefined) {
+        setUserborrowAmount(Number(borrowerDebt));
+      }
+    }, [borrowerDebt]);
+  
+    useEffect(() => {
+      if (collateralValue !== undefined) {
+        setTotalCollateralValue(Number(collateralValue));
+      }
+    }, [collateralValue]);
+  
+    useEffect(() => {
+    const interval = setInterval(() => {
+      refetchBorrowerDebt();
+      refetchCollateralValue();
+    }, 5000); // every 5 seconds
+  
+    return () => clearInterval(interval);
+  }, [address, refetchBorrowerDebt, refetchCollateralValue]);
+
+
+  return (
+    <p>User Borrowed Amount : {userborrowAmount}  and   the  Collateral value is : {totalCollateralValue}</p>
+  )
+}
+function UseTokenAddress({ symbol }: { symbol: string }) {
+  const { data: tokenAddress, isLoading, error } = useReadContract({
+    abi: ABIS.TOKEN_FACTORY,
+    functionName: "getTokenAddress",
+    address: CONTRACTS.TOKEN_FACTORY,
+    args: [symbol],
+  });
+
+  if (isLoading) return <div>Loading {symbol}...</div>;
+  if (error) return <div>Error loading {symbol}</div>;
+
+  return <p>{symbol}: {tokenAddress ?? "Address not found"}</p>;
+}
+
+function UseAllTokens() {
+  return (
+    <div>
+      {SYNTHETIC_STOCKS.map((token) => (
+        <UseTokenAddress key={token.symbol} symbol={token.symbol} />
+      ))}
+    </div>
+  );
+}
+
+function SeePrice(){
+  const {address} = useAccount();
+  const {data} =useReadContract({
+    abi:ABIS.ORACLE,
+    functionName:"prices",
+    address :CONTRACTS.ORACLE,
+    args: ["0x7a8979e743ffE1874b6E895C849E1629472072ee"]
+  })
+
+  console.log("Price :" , data );
+}
+
 function App() {
   const [tokenAddr, setTokenAddr] = useState<Address>();
-
+  //  const allTokens = useAllTokens();
+  //  console.log("tokens :",allTokens);
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -334,8 +432,11 @@ function App() {
           <SettokenValue tokenAddr={tokenAddr} />
           <SetCollateralVaultAddress />
           <BorrowmUSDC />
+          <UseAllTokens/>
           <GetmUSDCBalancee />
           <GetCollateral tokenAddr={tokenAddr} />
+          <BorrowerPosition/>
+          <SeePrice/>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
