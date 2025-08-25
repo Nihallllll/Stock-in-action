@@ -55,7 +55,7 @@ export default function Home() {
             </Badge>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Welcome to <span className="text-primary-glow">Hedgehog</span>
+            Welcome to <span className="text-primary-glow">proof-of-Stocks</span>
           </h1>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Borrow stablecoins against synthetic stock collateral. Lend for competitive yields. 

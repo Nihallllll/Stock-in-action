@@ -4,24 +4,44 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Coins } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
+import { writeContract } from 'viem/actions';
+import { ABIS, CONTRACTS } from '@/constants/contracts';
+import { useAccount, useWriteContract } from 'wagmi';
+import { add } from 'date-fns';
 
 export function StockTable() {
   const { stockPrices } = useAppStore();
   const { toast } = useToast();
-
-  const handleMintToken = (symbol: string) => {
+  const {address} = useAccount();
+  const {writeContract} = useWriteContract();
+  async function MintStockToken(symbol : string){
+    await writeContract({
+      abi: ABIS.TOKEN_FACTORY,
+      functionName: "mintStockToken",
+      args: [symbol,address , BigInt(1000) ],
+      address: CONTRACTS.TOKEN_FACTORY,
+      account: address,
+      chain: undefined,
+    })
+  }
+  const handleMintToken = async(symbol: string) => {
     toast({
       title: "Minting Stock Token",
       description: `Minting 1000 ${symbol} tokens to your wallet...`,
     });
+    await MintStockToken(symbol);
+    toast({
+     title: "Mint Successful!",
+     description: `1000 ${symbol} tokens have been minted to your wallet.`,
+    });
     
     // Mock mint transaction
-    setTimeout(() => {
-      toast({
-        title: "Mint Successful!",
-        description: `1000 ${symbol} tokens have been minted to your wallet.`,
-      });
-    }, 2000);
+    // setTimeout(() => {
+    //   toast({
+    //     title: "Mint Successful!",
+    //     description: `1000 ${symbol} tokens have been minted to your wallet.`,
+    //   });
+    // }, 6000);
   };
 
   return (

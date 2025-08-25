@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ABIS, CONTRACTS } from '@/constants/contracts';
+import { write } from 'fs';
+import { add } from 'date-fns';
 
 export default function Lend() {
   const { toast } = useToast();
@@ -24,51 +26,153 @@ export default function Lend() {
   const {address ,isConnected } =useAccount();
   const [lenderDeposite ,setLenderDeposite] =useState(0);
   const {writeContract} =useWriteContract();
-
+  const [totalDeposits , setTotalDeposits ] = useState(0);
+  const [availableToWithdraw , setAvailableToWithdraw ] = useState(0);
+  // async function lenderBalance() {
+  //   const {data  , refetch} = useReadContract({
+  //   address : CONTRACTS.LENDING_POOL,
+  //   abi : ABIS.LENDING_POOL,
+  //   functionName : "lenderDeposits",
+  //   args : address ?[address]:undefined
+  // })
+  // console.log("data :" , data);
+  // setLenderDeposite(Number(data));
+  // }
   
-  async function lenderBalance() {
-    const {data  , refetch} = useReadContract({
-    address : CONTRACTS.LENDING_POOL,
-    abi : ABIS.LENDING_POOL,
-    functionName : "lenderDeposits",
-    args : address ?[address]:undefined
-  })
-  setLenderDeposite(Number(data));
-  }
-  async function lenderDepositeTx(){
-    await writeContract({
-      abi: ABIS.LENDING_POOL,
-      functionName: "deposit",
-      args: depositAmount ? [CONTRACTS.MUSDC,BigInt(depositAmount)] : undefined,
-      address: CONTRACTS.LENDING_POOL,
-      chain: undefined,
-      account: address,
-    })
-  
+  /*{
     
+    user mUSDC balance 
+
+  }*/
+ const ERC20_ABI = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+];
+  
+  const { data: balance, isLoading, error } = useReadContract({
+  abi: ERC20_ABI,
+  address: CONTRACTS.MUSDC,
+  functionName: 'balanceOf',
+  args: [address],
+  });
+  const [mUSDCbalanace, setmUSDCbalance] =useState(0);
+
+   useEffect(()=>{
+       if (balance !== undefined) {
+       setmUSDCbalance(Number(balance));
+      }
+    },[balance])
+
+   const {
+      data: lenderBalance,
+      refetch: refetchLenderDebt,
+    } = useReadContract({
+      abi: ABIS.LENDING_POOL,
+      functionName: "lenderDeposits",
+      args: [address],
+      address: CONTRACTS.LENDING_POOL
+    });
+
+  
+  async function lenderDepositeTx(){
+     await writeContract({
+       abi: ABIS.ERC20,
+       functionName: "approve",
+       args: [CONTRACTS.LENDING_POOL, BigInt(depositAmount)],
+       address: CONTRACTS.MUSDC, // mUSDC token address
+       account: address,
+       chain: undefined
+     });
+
+      // Step 2: deposit
+      await writeContract({
+        abi: ABIS.LENDING_POOL,
+        functionName: "deposit",
+        args: [CONTRACTS.MUSDC, BigInt(depositAmount)],
+        address: CONTRACTS.LENDING_POOL,
+        account: address,
+        chain: undefined
+      });
   }
   
   useEffect(() => {
-    lenderDepositeTx();
-  }, [address])
+    
+    setLenderDeposite(Number(lenderBalance));
+  }, [address , lenderBalance])
+ 
 
-
-  useEffect(() => {
-    lenderBalance();
-  }, [address])
+  async function lenderWithdraw(){
+    
+      await writeContract({
+        abi: ABIS.LENDING_POOL,
+        functionName: "withdraw",
+        args: [CONTRACTS.MUSDC, BigInt(withdrawAmount)],
+        address: CONTRACTS.LENDING_POOL,
+        account: address,
+        chain: undefined
+      });
+  }
   
+  
+  
+  /* {
+    
+    Total pool Balance of the pool ,
+    fetching the state varible from the contract
+
+   } */
+   const {
+      data: totalPoolBalance,
+      refetch: refetchDepositeBalance,
+    } = useReadContract({
+      abi: ABIS.LENDING_POOL,
+      functionName: "totalPoolBalance",
+      address: CONTRACTS.LENDING_POOL
+    });
+    
+    useEffect(() => {
+       setTotalDeposits(Number(totalPoolBalance));
+    }, [lenderBalance ,lenderDepositeTx])
+    
+   
+     /* {
+    
+    maximum available amount ,
+    fetching the "mappings" from the contract
+
+   } */
+   const {
+      data: availwithDrawAmount,
+      refetch: refetchavailwithDrawAmount,
+    } = useReadContract({
+      abi: ABIS.LENDING_POOL,
+      functionName: "lenderDeposits",
+      address: CONTRACTS.LENDING_POOL,
+      args : [address]
+    });
+    
+    useEffect(() => {
+       setAvailableToWithdraw(Number(availwithDrawAmount));
+    }, [lenderBalance ,lenderDepositeTx])
+    
+  console.log("withdraw :" , availwithDrawAmount)
 
 
   // Mock data for demonstration
   const userStats = {
     deposited: lenderDeposite,
     earned: '125.50',
-    availableToWithdraw: '5,125.50',
+    availableToWithdraw: availableToWithdraw,
     currentAPY: '5.25',
   };
 
   const poolStats = {
-    totalDeposits: '12,450,000',
+    totalDeposits: totalDeposits,
     totalBorrowed: '8,920,000',
     utilizationRate: 71.6,
     supplyAPY: '5.25',
@@ -100,7 +204,7 @@ export default function Lend() {
     }, 2000);
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw =async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
       toast({
         title: "Error",
@@ -114,14 +218,18 @@ export default function Lend() {
       title: "Withdrawing mUSDC",
       description: `Withdrawing ${withdrawAmount} mUSDC from lending pool...`,
     });
-
-    setTimeout(() => {
-      toast({
-        title: "Withdrawal Successful!",
-        description: `Successfully withdrew ${withdrawAmount} mUSDC`,
-      });
-      setWithdrawAmount('');
-    }, 2000);
+     await lenderWithdraw();
+     toast({
+         title: "Withdrawal Successful!",
+         description: `Successfully withdrew ${withdrawAmount} mUSDC`,
+     });
+    // setTimeout(() => {
+    //   toast({
+    //     title: "Withdrawal Successful!",
+    //     description: `Successfully withdrew ${withdrawAmount} mUSDC`,
+    //   });
+    //   setWithdrawAmount('');
+    // }, 2000);
   };
 
   return (
@@ -146,7 +254,7 @@ export default function Lend() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Total Deposited</p>
-              <p className="text-2xl font-bold">${userStats.deposited} mUSDC</p>
+              <p className="text-2xl font-bold">${(userStats.deposited).toFixed(2)} mUSDC</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Interest Earned</p>
@@ -154,7 +262,7 @@ export default function Lend() {
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Available to Withdraw</p>
-              <p className="text-2xl font-bold">${userStats.availableToWithdraw} mUSDC</p>
+              <p className="text-2xl font-bold">${(userStats.availableToWithdraw).toFixed(2)} mUSDC</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Current APY</p>
@@ -194,7 +302,7 @@ export default function Lend() {
                     onChange={(e) => setDepositAmount(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    wallet mUSDC balance : 
+                    wallet mUSDC balance : {mUSDCbalanace}
                   </p>
                 </div>
                 
@@ -244,7 +352,7 @@ export default function Lend() {
                   <div className="flex justify-between text-sm">
                     <span>Remaining deposit:</span>
                     <span className="font-medium">
-                      {(parseFloat(userStats.availableToWithdraw) - (parseFloat(withdrawAmount) || 0)).toFixed(2)} mUSDC
+                      {(parseFloat(String(userStats.availableToWithdraw)) - (parseFloat(withdrawAmount) || 0)).toFixed(2)} mUSDC
                     </span>
                   </div>
                 </div>

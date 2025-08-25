@@ -1,39 +1,90 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  PieChart, 
-  TrendingUp, 
-  Shield, 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  PieChart,
+  TrendingUp,
+  Shield,
   AlertTriangle,
   DollarSign,
   Target,
   Activity,
-  Wallet
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useAppStore } from '@/lib/store';
+  Wallet,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAppStore } from "@/lib/store";
+import { useAccount, useReadContract } from "wagmi";
+import { ABIS, CONTRACTS, SYNTHETIC_STOCKS } from "@/constants/contracts";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-  const { userPosition, stockPrices, isConnected } = useAppStore();
+  // const { userPosition, stockPrices, isConnected } = useAppStore();
+  const { address, isConnected } = useAccount();
+  const [collateralVal, setCollateralVal] = useState(0);
+  const [borrowedAmount, setBorrowedAmount] = useState(0);
+  const tokenvec = [];
+  const tokenquantityVec = [];
+  // Read contract: collateralValue
+  const { data: collateralValue, refetch: refetchCollateralValue } =
+    useReadContract({
+      abi: ABIS.COLLATERAL_VAULT,
+      functionName: "getCollateralValue",
+      args: [address],
+      address: CONTRACTS.COLLATERAL_VAULT,
+    });
+
+  //Read borrow debt
+  const { data: borrowerDebt, refetch: refetchBorrowerDebt } = useReadContract({
+    abi: ABIS.LENDING_POOL,
+    functionName: "borrowerDebt",
+    args: [address],
+    address: CONTRACTS.LENDING_POOL,
+  });
+  useEffect(() => {
+    if (borrowerDebt !== undefined) {
+      setBorrowedAmount(Number(borrowerDebt));
+    }
+  }, [borrowerDebt]);
+  useEffect(() => {
+    if (collateralValue !== undefined) {
+      setCollateralVal(Number(collateralValue));
+    }
+  }, [collateralValue]);
+ 
+  for (const t of SYNTHETIC_STOCKS) {
+    const { data: tokens } = useReadContract({
+      abi: ABIS.COLLATERAL_VAULT,
+      functionName: "collateralBalance",
+      address: CONTRACTS.COLLATERAL_VAULT,
+      account: address,
+      args: [address, t.address],
+    });
+    if(tokens > 0) {
+      tokenvec.push(t.symbol);
+      tokenquantityVec.push(tokens);
+    }
+  }
 
   // Mock user portfolio data
   const portfolio = {
     collateralTokens: [
-      { symbol: 'tAAPL', balance: '100', value: '17,550', address: '0x1111' },
-      { symbol: 'tTSLA', balance: '50', value: '12,265', address: '0x2222' },
-      { symbol: 'tGOOGL', balance: '75', value: '10,710', address: '0x3333' },
+      { symbol: "tAAPL", balance: "100", value: "17,550", address: "0x1111" },
+      { symbol: "tTSLA", balance: "50", value: "12,265", address: "0x2222" },
+      { symbol: "tGOOGL", balance: "75", value: "10,710", address: "0x3333" },
     ],
-    borrowedAmount: '25,000',
-    healthFactor: '2.34',
-    totalCollateralValue: '40,525',
+    borrowedAmount: String(borrowedAmount),
+    healthFactor: "2.34",
+    totalCollateralValue: String(collateralValue),
     liquidationRisk: false,
   };
 
   const healthFactorValue = parseFloat(portfolio.healthFactor);
   const isHealthy = healthFactorValue >= 1.5;
-  const utilizationRate = (parseFloat(portfolio.borrowedAmount) / parseFloat(portfolio.totalCollateralValue)) * 100;
+  const utilizationRate =
+    (parseFloat(portfolio.borrowedAmount) /
+      parseFloat(portfolio.totalCollateralValue)) *
+    100;
 
   if (!isConnected) {
     return (
@@ -62,7 +113,7 @@ export default function Dashboard() {
             Monitor your positions and manage your portfolio
           </p>
         </div>
-        <Badge 
+        <Badge
           variant={isHealthy ? "default" : "destructive"}
           className="text-sm px-3 py-1"
         >
@@ -76,8 +127,12 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Collateral</p>
-                <p className="text-2xl font-bold">${portfolio.totalCollateralValue}</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Total Collateral
+                </p>
+                <p className="text-2xl font-bold">
+                  ${portfolio.totalCollateralValue}
+                </p>
               </div>
               <div className="p-3 rounded-lg bg-primary/10">
                 <Target className="h-6 w-6 text-primary" />
@@ -90,8 +145,12 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Borrowed</p>
-                <p className="text-2xl font-bold">${portfolio.borrowedAmount}</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Total Borrowed
+                </p>
+                <p className="text-2xl font-bold">
+                  ${portfolio.borrowedAmount}
+                </p>
               </div>
               <div className="p-3 rounded-lg bg-accent/10">
                 <DollarSign className="h-6 w-6 text-accent" />
@@ -104,12 +163,22 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Health Factor</p>
-                <p className={`text-2xl font-bold ${isHealthy ? 'text-success' : 'text-destructive'}`}>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Health Factor
+                </p>
+                <p
+                  className={`text-2xl font-bold ${
+                    isHealthy ? "text-success" : "text-destructive"
+                  }`}
+                >
                   {portfolio.healthFactor}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${isHealthy ? 'bg-success/10' : 'bg-destructive/10'}`}>
+              <div
+                className={`p-3 rounded-lg ${
+                  isHealthy ? "bg-success/10" : "bg-destructive/10"
+                }`}
+              >
                 {isHealthy ? (
                   <Shield className="h-6 w-6 text-success" />
                 ) : (
@@ -124,8 +193,12 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Utilization</p>
-                <p className="text-2xl font-bold">{utilizationRate.toFixed(1)}%</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Utilization
+                </p>
+                <p className="text-2xl font-bold">
+                  {utilizationRate.toFixed(1)}%
+                </p>
               </div>
               <div className="p-3 rounded-lg bg-warning/10">
                 <Activity className="h-6 w-6 text-warning" />
@@ -147,22 +220,32 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-4">
               {portfolio.collateralTokens.map((token) => (
-                <div key={token.symbol} className="flex items-center justify-between p-4 rounded-lg border">
+                <div
+                  key={token.symbol}
+                  className="flex items-center justify-between p-4 rounded-lg border"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
                       <span className="text-sm font-bold text-primary-foreground">
-                        {token.symbol.replace('t', '')}
+                        {token.symbol.replace("t", "")}
                       </span>
                     </div>
                     <div>
                       <p className="font-medium">{token.symbol}</p>
-                      <p className="text-sm text-muted-foreground">{token.balance} tokens</p>
+                      <p className="text-sm text-muted-foreground">
+                        {token.balance} tokens
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">${token.value}</p>
                     <p className="text-sm text-success">
-                      {((parseFloat(token.value) / parseFloat(portfolio.totalCollateralValue)) * 100).toFixed(1)}%
+                      {(
+                        (parseFloat(token.value) /
+                          parseFloat(portfolio.totalCollateralValue)) *
+                        100
+                      ).toFixed(1)}
+                      %
                     </p>
                   </div>
                 </div>
@@ -189,19 +272,22 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Health Factor</span>
-                <span className={`text-sm font-medium ${isHealthy ? 'text-success' : 'text-destructive'}`}>
+                <span
+                  className={`text-sm font-medium ${
+                    isHealthy ? "text-success" : "text-destructive"
+                  }`}
+                >
                   {portfolio.healthFactor}
                 </span>
               </div>
-              <Progress 
-                value={Math.min(100, (healthFactorValue / 3) * 100)} 
-                className={isHealthy ? 'text-success' : 'text-destructive'}
+              <Progress
+                value={Math.min(100, (healthFactorValue / 3) * 100)}
+                className={isHealthy ? "text-success" : "text-destructive"}
               />
               <p className="text-xs text-muted-foreground">
-                {isHealthy 
-                  ? 'Your position is healthy with good safety margin'
-                  : 'Warning: Your position is at risk of liquidation'
-                }
+                {isHealthy
+                  ? "Your position is healthy with good safety margin"
+                  : "Warning: Your position is at risk of liquidation"}
               </p>
             </div>
 
@@ -209,7 +295,9 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Utilization Rate</span>
-                <span className="text-sm font-medium">{utilizationRate.toFixed(1)}%</span>
+                <span className="text-sm font-medium">
+                  {utilizationRate.toFixed(1)}%
+                </span>
               </div>
               <Progress value={utilizationRate} />
               <p className="text-xs text-muted-foreground">
@@ -236,9 +324,12 @@ export default function Dashboard() {
                 <div className="flex items-start space-x-2">
                   <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-destructive">Liquidation Risk</p>
+                    <p className="font-medium text-destructive">
+                      Liquidation Risk
+                    </p>
                     <p className="text-muted-foreground mt-1">
-                      Your health factor is below 1.5. Consider adding more collateral or repaying debt.
+                      Your health factor is below 1.5. Consider adding more
+                      collateral or repaying debt.
                     </p>
                   </div>
                 </div>
@@ -259,18 +350,47 @@ export default function Dashboard() {
         <CardContent>
           <div className="space-y-4">
             {[
-              { type: 'Deposit', asset: 'tAAPL', amount: '50', time: '2 hours ago', status: 'completed' },
-              { type: 'Borrow', asset: 'mUSDC', amount: '5,000', time: '1 day ago', status: 'completed' },
-              { type: 'Repay', asset: 'mUSDC', amount: '1,000', time: '3 days ago', status: 'completed' },
+              {
+                type: "Deposit",
+                asset: "tAAPL",
+                amount: "50",
+                time: "2 hours ago",
+                status: "completed",
+              },
+              {
+                type: "Borrow",
+                asset: "mUSDC",
+                amount: "5,000",
+                time: "1 day ago",
+                status: "completed",
+              },
+              {
+                type: "Repay",
+                asset: "mUSDC",
+                amount: "1,000",
+                time: "3 days ago",
+                status: "completed",
+              },
             ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+              >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.status === 'completed' ? 'bg-success' : 'bg-warning'
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      activity.status === "completed"
+                        ? "bg-success"
+                        : "bg-warning"
+                    }`}
+                  />
                   <div>
-                    <p className="font-medium">{activity.type} {activity.asset}</p>
-                    <p className="text-sm text-muted-foreground">{activity.time}</p>
+                    <p className="font-medium">
+                      {activity.type} {activity.asset}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {activity.time}
+                    </p>
                   </div>
                 </div>
                 <p className="font-medium">{activity.amount}</p>

@@ -164,7 +164,7 @@ function Mintmusdc() {
       await writeContract({
         abi: ABIS.ERC20,
         functionName: "mint",
-        args: [address, BigInt(100000)],
+        args: [address, BigInt(2542324324)],
         address: CONTRACTS.MUSDC,
         account: address,
       });
@@ -192,7 +192,7 @@ function DepositemUSDC() {
       await writeContract({
         abi: ABIS.ERC20,
         functionName: "approve",
-        args: [CONTRACTS.LENDING_POOL, BigInt(1000)],
+        args: [CONTRACTS.LENDING_POOL, BigInt(2542324324)],
         address: CONTRACTS.MUSDC, // mUSDC token address
         account: address,
       });
@@ -201,7 +201,7 @@ function DepositemUSDC() {
       await writeContract({
         abi: ABIS.LENDING_POOL,
         functionName: "deposit",
-        args: [CONTRACTS.MUSDC, BigInt(1000)],
+        args: [CONTRACTS.MUSDC, BigInt(2542324324)],
         address: CONTRACTS.LENDING_POOL, // <-- fix here
         account: address,
       });
@@ -378,7 +378,7 @@ function BorrowerPosition(){
     <p>User Borrowed Amount : {userborrowAmount}  and   the  Collateral value is : {totalCollateralValue}</p>
   )
 }
-function UseTokenAddress({ symbol }: { symbol: string }) {
+function UseTokenAddress({ symbol , addr }: { symbol: string , addr : Address } ) {
   const { data: tokenAddress, isLoading, error } = useReadContract({
     abi: ABIS.TOKEN_FACTORY,
     functionName: "getTokenAddress",
@@ -386,17 +386,24 @@ function UseTokenAddress({ symbol }: { symbol: string }) {
     args: [symbol],
   });
 
+  const {data : price} = useReadContract({
+    abi : ABIS.ORACLE,
+    functionName :"getPrice",
+    args :[addr],
+    address : CONTRACTS.ORACLE
+  })
+
   if (isLoading) return <div>Loading {symbol}...</div>;
   if (error) return <div>Error loading {symbol}</div>;
 
-  return <p>{symbol}: {tokenAddress ?? "Address not found"}</p>;
+  return <p>{symbol}: {tokenAddress ?? "Address not found"} = { price}</p>;
 }
 
 function UseAllTokens() {
   return (
     <div>
       {SYNTHETIC_STOCKS.map((token) => (
-        <UseTokenAddress key={token.symbol} symbol={token.symbol} />
+        <UseTokenAddress key={token.symbol} symbol={token.symbol} addr = {token.address} />
       ))}
     </div>
   );
