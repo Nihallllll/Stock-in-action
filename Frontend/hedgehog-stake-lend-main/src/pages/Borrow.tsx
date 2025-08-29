@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { ABIS, CONTRACTS, SYNTHETIC_STOCKS } from "@/constants/contracts";
 import { Address } from "viem";
+import CollateralCard from "./CollateralCard";
 
 export default function Borrow() {
   const { stockPrices, userPosition } = useAppStore();
@@ -167,6 +168,8 @@ export default function Borrow() {
     }
   };
 
+  const handleWithdrawCollateral = async () => {}
+
   // ------------------------
   // Write contract: borrow amount
   async function borrowAmountFromPool() {
@@ -263,7 +266,7 @@ export default function Borrow() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Deposit Collateral */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Plus className="h-5 w-5" />
@@ -312,7 +315,13 @@ export default function Borrow() {
               Deposit Collateral
             </Button>
           </CardContent>
-        </Card>
+        </Card> */}
+        <CollateralCard
+          
+          stockPrices={stockPrices}
+          handleDeposit={handleDepositCollateral}
+          handleWithdraw={handleWithdrawCollateral}
+        />
 
         {/* Borrow mUSDC */}
         <Card>

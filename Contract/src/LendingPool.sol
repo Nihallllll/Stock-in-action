@@ -18,8 +18,14 @@ contract LendingPool is ReentrancyGuard, Ownable {
     uint256 public totalPoolBalance;
     uint256 public totalBorrowed;
     uint256 public ltvBps = 8000;
-    
-    mapping(address => uint256) public lenderDeposits;
+    uint public BONUS = 8;
+
+    struct LenderPosition {
+        uint _time;
+        uint _depositAmount;
+    }
+
+    mapping(address => LenderPosition) public lenderDeposits;
     mapping(address => uint256) public borrowerDebt;
 
     event LenderDeposited(address indexed lender, uint256 amount);
@@ -28,58 +34,88 @@ contract LendingPool is ReentrancyGuard, Ownable {
     event Repaid(address indexed borrower, uint256 amount);
     event CollateralVaultSet(address indexed vault);
     event LTVUpdated(uint256 newLtvBps);
- 
-    constructor(address _mUSDC)Ownable(msg.sender) {
+    event BonusUpdated(uint256 newBonus);
+
+    constructor(address _mUSDC) Ownable(msg.sender) {
         require(_mUSDC != address(0), "mUSDC required");
         musdc = IERC20(_mUSDC);
     }
 
-    function setCollateralVault(address _vault) external  {
+    function setCollateralVault(address _vault) external onlyOwner {
         collateralVault = _vault;
         emit CollateralVaultSet(_vault);
     }
 
-    function setLTV(uint256 _ltvBps) external  {
+    function setLTV(uint256 _ltvBps) external onlyOwner {
         require(_ltvBps <= 10000, "ltv invalid");
         ltvBps = _ltvBps;
         emit LTVUpdated(_ltvBps);
     }
 
-    function deposit(address token, uint256 amount) external nonReentrant {
+    function changeBonus(uint256 bonus) external onlyOwner {
+        BONUS = bonus;
+        emit BonusUpdated(bonus);
+    }
+
+    function deposit(uint256 amount) external nonReentrant {
         require(amount > 0, "zero amount");
-        require(token == address(musdc), "only mUSDC");
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        lenderDeposits[msg.sender] += amount;
+        musdc.safeTransferFrom(msg.sender, address(this), amount);
+
+        LenderPosition storage position = lenderDeposits[msg.sender];
+
+        // Reset interest timestamp only if first deposit
+        if (position._depositAmount == 0) {
+            position._time = block.timestamp;
+        }
+
+        position._depositAmount += amount;
         totalPoolBalance += amount;
+
         emit LenderDeposited(msg.sender, amount);
     }
 
-    function withdraw(address token, uint256 amount) external nonReentrant {
-        require(token == address(musdc), "only mUSDC");
-        require(lenderDeposits[msg.sender] >= amount, "insufficient deposit");
-        require(totalPoolBalance >= amount, "insufficient pool liquidity");
-        lenderDeposits[msg.sender] -= amount;
-        totalPoolBalance -= amount;
-        IERC20(token).safeTransfer(msg.sender, amount);
-        emit LenderWithdrawn(msg.sender, amount);
+    function withdraw(uint256 amount) external nonReentrant {
+        LenderPosition storage position = lenderDeposits[msg.sender];
+        require(amount > 0 && amount <= position._depositAmount, "Invalid amount");
+
+        uint totalBenefit = getLenderWithdrawAmount(msg.sender);
+
+        // Update storage
+        position._depositAmount -= amount;
+        position._time = block.timestamp;
+        totalPoolBalance -= (amount + totalBenefit);
+
+        musdc.safeTransfer(msg.sender, amount + totalBenefit);
+        emit LenderWithdrawn(msg.sender, amount + totalBenefit);
+    }
+
+    function getLenderWithdrawAmount(address user) public view returns (uint) {
+        LenderPosition storage position = lenderDeposits[user];
+        if (position._depositAmount == 0) return 0;
+
+        uint timeElapsed = block.timestamp - position._time;
+        if (timeElapsed < 2 minutes) return 0;
+
+        uint periods = timeElapsed / 2 minutes;
+        return (position._depositAmount * BONUS * periods) / 100 ;
     }
 
     function borrow(uint256 amount) external nonReentrant {
         require(amount > 0, "zero amount");
-        require(collateralVault != address(0), "no collateral vault set");
+        require(collateralVault != address(0), "no collateral vault");
 
         uint256 collateralValue = ICollateralVault(collateralVault).getCollateralValue(msg.sender);
-        uint256 existingDebt = borrowerDebt[msg.sender];
         uint256 maxBorrow = (collateralValue * ltvBps) / 10000;
+        uint256 newDebt = borrowerDebt[msg.sender] + amount;
 
-        require(existingDebt + amount <= maxBorrow, "insufficient collateral");
-        require(totalPoolBalance >= amount, "insufficient liquidity in pool");
+        require(newDebt <= maxBorrow, "insufficient collateral");
+        require(totalPoolBalance >= amount, "insufficient liquidity");
 
-        borrowerDebt[msg.sender] = existingDebt + amount;
+        borrowerDebt[msg.sender] = newDebt;
         totalBorrowed += amount;
         totalPoolBalance -= amount;
-        IERC20(address(musdc)).safeTransfer(msg.sender, amount);
 
+        musdc.safeTransfer(msg.sender, amount);
         emit Borrowed(msg.sender, amount);
     }
 
@@ -88,8 +124,9 @@ contract LendingPool is ReentrancyGuard, Ownable {
         uint256 debt = borrowerDebt[msg.sender];
         require(debt >= amount, "repay > debt");
 
-        IERC20(address(musdc)).safeTransferFrom(msg.sender, address(this), amount);
-        borrowerDebt[msg.sender] = debt - amount;
+        musdc.safeTransferFrom(msg.sender, address(this), amount);
+
+        borrowerDebt[msg.sender] -= amount;
         totalBorrowed -= amount;
         totalPoolBalance += amount;
 
@@ -100,94 +137,18 @@ contract LendingPool is ReentrancyGuard, Ownable {
         return borrowerDebt[user];
     }
 
-    function getUserDeposit(address user) external view returns (uint256) {
-        return lenderDeposits[user];
+    function getLenderDeposit(address user) external view returns (uint256) {
+        return lenderDeposits[user]._depositAmount;
     }
 
     function availableLiquidity() external view returns (uint256) {
         return totalPoolBalance;
     }
+
+    function getHealthFactor(address user) external view returns (uint256) {
+        uint collateralValue = ICollateralVault(collateralVault).getCollateralValue(user);
+        uint debt = borrowerDebt[user];
+        if (debt == 0) return type(uint256).max;
+        return (collateralValue * ltvBps) / debt;
+    }
 }
-
-
-
-
-
-// pragma solidity ^0.8.13;
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// contract LendingPool {
-//     using SafeERC20 for IERC20;
-//     //state variables
-//     uint public totalPoolBalance;
-//     IERC20 public immutable musdc;
-//     address CollateralVault;
-//     uint constant public BONUS = 8 ;
-//     uint constant public INTEREST_RATE = 10 ;
-//     struct LenderPosition {
-//         uint _time ;
-//         uint _depositAmount;
-//     }
-
-//     //constructor
-
-//     constructor(address _musdc , address _collateralValut){
-//         musdc = IERC20(_musdc);
-//         CollateralVault = _collateralValut;
-//     }
-//     //mappings
-//     mapping(address => LenderPosition )public  lendersBalances;
-//     mapping (address => uint) borrowerBalances;
-//     //Lenders functions
-
-//     function deposite(address _token,uint _amount) external {
-//         require(_amount > 0);
-//         require(_token == address(musdc), "Invalid token");
-//         musdc.safeTransferFrom(msg.sender, address(this), _amount);//require??
-//         totalPoolBalance += _amount;
-//         lendersBalances[msg.sender]._depositAmount += _amount;
-//     }
-
-//     function withdraw(address _token,uint _amount) external {
-//        LenderPosition storage position = lendersBalances[msg.sender];
-//         require(_amount > 0 && _amount <= position._depositAmount);
-//         require(IERC20(_token) == musdc);
-//         uint totalBenefit = getLenderWithdrawAmount(msg.sender);
-//         musdc.transfer(msg.sender , totalBenefit);
-//         position._depositAmount -= _amount;
-//         position._time = block.timestamp;
-//         totalPoolBalance -= totalBenefit ;
-//     }
- 
-//     function getLenderWithdrawAmount(address _address) internal returns(uint){
-//         LenderPosition storage position = lendersBalances[_address];
-//         uint timeElapsed = block.timestamp - position._time ;
-//         require(timeElapsed > 1 days);
-//         uint totalBenefit = (position._depositAmount * BONUS )/100 ;
-//         return totalBenefit;
-//     }
-
-
-//     //Borrower
-
-//     function borrow(address _token , uint _amount) public{
-//      //1st is collateral sufficient 
-//      CollateralVault.getCollateralValue(_token ,_amount);
-//      //2nd amount <= collateral 
-//      musdc.transfer(msg.sender , _amount);
-//      totalPoolBalance -= _amount ;
-//      borrowerBalances[msg.sender] += _amount + (_amount / 10); //storing the total debt amount + intersest
-//     }
-
-//     function repay(address _token , uint _amount) external{
-//      require(borrowerBalances[msg.sender]  >= _amount);
-//      require(_amount != 0);
-//      IERC20( _token).safeTransferFrom(msg.sender , address(this) , _amount);
-//      borrowerBalances[msg.sender] -= _amount;
-//      totalPoolBalance += _amount ;
-//     }
-
-//     function getUserDebt() external view  returns(uint){
-//      return borrowerBalances[msg.sender];
-//     }
-// }

@@ -93,7 +93,7 @@ export default function Lend() {
       await writeContract({
         abi: ABIS.LENDING_POOL,
         functionName: "deposit",
-        args: [CONTRACTS.MUSDC, BigInt(depositAmount)],
+        args: [ BigInt(depositAmount)],
         address: CONTRACTS.LENDING_POOL,
         account: address,
         chain: undefined
@@ -111,7 +111,7 @@ export default function Lend() {
       await writeContract({
         abi: ABIS.LENDING_POOL,
         functionName: "withdraw",
-        args: [CONTRACTS.MUSDC, BigInt(withdrawAmount)],
+        args: [BigInt(withdrawAmount)],
         address: CONTRACTS.LENDING_POOL,
         account: address,
         chain: undefined

@@ -1,11 +1,11 @@
 // Contract addresses and ABIs for Hedgehog DeFi Protocol
 export const CONTRACTS = {
   // Sepolia testnet addresses (mock addresses for demo)
-  LENDING_POOL: '0xc7699b496E7F7498459F4113F0C06924Ea7D2861' as const,
-  COLLATERAL_VAULT: '0x3BE36A7cfAFE69d2D90fF43A6005D402CcC201E6' as const,
-  ORACLE: '0x9A5998FBb9172B36711F78d8A36E81e762a68f63' as const,
-  TOKEN_FACTORY: '0xdD7b7744b3dc477a6cA88c0B03e060339feB4b31' as const,
-  MUSDC: '0x7C28c7Bc5e48A11187eD69f1600597a03950A7bE' as const,
+  LENDING_POOL: '0x1a345258154E85A54cA2B4A62211665358327bff' as const,
+  COLLATERAL_VAULT: '0xebFc78cF41fD3BBF6257Ac9F2F0196B383580c54' as const,
+  ORACLE: '0xacC61dD6b836D4528C819533878b8676e93223E9' as const,
+  TOKEN_FACTORY: '0x8731DdfE59D54Bff0a22e9FbeC6625B15524ef77' as const,
+  MUSDC: '0x3c99c026ae9437fd4C9AEE136A6b0E4128484cDE' as const,
 };
 
 // Simplified ABIs for demo (in production, import from artifacts)
@@ -280,6 +280,13 @@ export const ABIS = {
     },
     {
       "type": "function",
+      "name": "BONUS",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "availableLiquidity",
       "inputs": [],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
@@ -303,6 +310,15 @@ export const ABIS = {
     },
     {
       "type": "function",
+      "name": "changeBonus",
+      "inputs": [
+        { "name": "bonus", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "collateralVault",
       "inputs": [],
       "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
@@ -312,11 +328,37 @@ export const ABIS = {
       "type": "function",
       "name": "deposit",
       "inputs": [
-        { "name": "token", "type": "address", "internalType": "address" },
         { "name": "amount", "type": "uint256", "internalType": "uint256" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getHealthFactor",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getLenderDeposit",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getLenderWithdrawAmount",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -329,18 +371,16 @@ export const ABIS = {
     },
     {
       "type": "function",
-      "name": "getUserDeposit",
-      "inputs": [
-        { "name": "user", "type": "address", "internalType": "address" }
-      ],
-      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "lenderDeposits",
       "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
-      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "outputs": [
+        { "name": "_time", "type": "uint256", "internalType": "uint256" },
+        {
+          "name": "_depositAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
       "stateMutability": "view"
     },
     {
@@ -427,11 +467,23 @@ export const ABIS = {
       "type": "function",
       "name": "withdraw",
       "inputs": [
-        { "name": "token", "type": "address", "internalType": "address" },
         { "name": "amount", "type": "uint256", "internalType": "uint256" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "BonusUpdated",
+      "inputs": [
+        {
+          "name": "newBonus",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
     },
     {
       "type": "event",
@@ -578,7 +630,7 @@ export const ABIS = {
     }
   ],
   COLLATERAL_VAULT: [
-   {
+  {
       "type": "constructor",
       "inputs": [
         { "name": "_oracle", "type": "address", "internalType": "address" }
@@ -634,6 +686,15 @@ export const ABIS = {
     },
     {
       "type": "function",
+      "name": "maxBorrowable",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "oracle",
       "inputs": [],
       "outputs": [
@@ -672,6 +733,13 @@ export const ABIS = {
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "totalPoolCollateralBalance",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -812,7 +880,7 @@ export const ABIS = {
 ],
   
   ORACLE: [
-  { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+ { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "getPrice",
@@ -894,9 +962,10 @@ export const ABIS = {
       "inputs": [
         { "name": "account", "type": "address", "internalType": "address" }
       ]
-    }],
+    }
+  ],
   TOKEN_FACTORY: [ 
-   { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+  { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "createStockToken",
@@ -1032,10 +1101,11 @@ export const ABIS = {
       "inputs": [
         { "name": "account", "type": "address", "internalType": "address" }
       ]
-    }],
+    }
+  ],
 
   ERC20: [
-    { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+   { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "allowance",

@@ -17,7 +17,8 @@ interface IOracle {
 
 contract CollateralVault is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
-
+    uint ltvBps = 8000;
+    uint public  totalPoolCollateralBalance ;
     mapping(address => mapping(address => uint256)) public collateralBalance;
     mapping(address => address[]) internal userTokens;
     mapping(address => mapping(address => bool)) internal tokenExistsForUser;
@@ -55,6 +56,7 @@ contract CollateralVault is ReentrancyGuard, Ownable {
         }
 
         collateralBalance[msg.sender][token] += amount;
+        totalPoolCollateralBalance += amount;
         emit CollateralDeposited(msg.sender, token, amount);
     }
 
@@ -113,6 +115,13 @@ contract CollateralVault is ReentrancyGuard, Ownable {
     function getUserTokens(address user) external view returns (address[] memory) {
         return userTokens[user];
     }
+
+    function maxBorrowable(address user) external view returns (uint256) {
+        uint total = getCollateralValue(user);
+        return (total * ltvBps) / 10000;
+    }
+
+    
 }
 
 
