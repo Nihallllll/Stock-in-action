@@ -76,7 +76,10 @@ contract LendingPool is ReentrancyGuard, Ownable {
 
     function withdraw(uint256 amount) external nonReentrant {
         LenderPosition storage position = lenderDeposits[msg.sender];
-        require(amount > 0 && amount <= position._depositAmount, "Invalid amount");
+        require(
+            amount > 0 && amount <= position._depositAmount,
+            "Invalid amount"
+        );
 
         uint totalBenefit = getLenderWithdrawAmount(msg.sender);
 
@@ -96,15 +99,16 @@ contract LendingPool is ReentrancyGuard, Ownable {
         uint timeElapsed = block.timestamp - position._time;
         if (timeElapsed < 2 minutes) return 0;
 
-        uint periods = timeElapsed / 2 minutes;
-        return (position._depositAmount * BONUS * periods) / 100 ;
+        uint periods = timeElapsed / 10 minutes;
+        return (position._depositAmount * BONUS * periods) / 100;
     }
 
     function borrow(uint256 amount) external nonReentrant {
         require(amount > 0, "zero amount");
         require(collateralVault != address(0), "no collateral vault");
 
-        uint256 collateralValue = ICollateralVault(collateralVault).getCollateralValue(msg.sender);
+        uint256 collateralValue = ICollateralVault(collateralVault)
+            .getCollateralValue(msg.sender);
         uint256 maxBorrow = (collateralValue * ltvBps) / 10000;
         uint256 newDebt = borrowerDebt[msg.sender] + amount;
 
@@ -146,9 +150,16 @@ contract LendingPool is ReentrancyGuard, Ownable {
     }
 
     function getHealthFactor(address user) external view returns (uint256) {
-        uint collateralValue = ICollateralVault(collateralVault).getCollateralValue(user);
+        uint collateralValue = ICollateralVault(collateralVault)
+            .getCollateralValue(user);
         uint debt = borrowerDebt[user];
         if (debt == 0) return type(uint256).max;
         return (collateralValue * ltvBps) / debt;
+    }
+    function fundPool(uint256 amount) external onlyOwner {
+        require(amount > 0, "zero amount");
+
+        musdc.safeTransferFrom(msg.sender, address(this), amount);
+        totalPoolBalance += amount;
     }
 }

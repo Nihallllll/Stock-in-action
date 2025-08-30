@@ -1,11 +1,11 @@
 // Contract addresses and ABIs for Hedgehog DeFi Protocol
 export const CONTRACTS = {
   // Sepolia testnet addresses (mock addresses for demo)
-  LENDING_POOL: '0x1a345258154E85A54cA2B4A62211665358327bff' as const,
-  COLLATERAL_VAULT: '0xebFc78cF41fD3BBF6257Ac9F2F0196B383580c54' as const,
-  ORACLE: '0xacC61dD6b836D4528C819533878b8676e93223E9' as const,
-  TOKEN_FACTORY: '0x8731DdfE59D54Bff0a22e9FbeC6625B15524ef77' as const,
-  MUSDC: '0x3c99c026ae9437fd4C9AEE136A6b0E4128484cDE' as const,
+  LENDING_POOL: '0x062E6C8C2612060Be292e1a1BEaC68954dB58047' as const,
+  COLLATERAL_VAULT: '0x4Af8fDd8920b071Cd4B89c68Bd01261a84A18fCd' as const,
+  ORACLE: '0x57cdfE44DfEa7c1979bc7aE0Ba435B7897a8F5F4' as const,
+  TOKEN_FACTORY: '0xCBD432A477ad6C2fCb53391430Cf661147a0A6df' as const,
+  MUSDC: '0xA2FC12A0bee99Bd9F427088AAB411F86Bb425922' as const,
 };
 
 // Simplified ABIs for demo (in production, import from artifacts)
@@ -271,7 +271,7 @@ export const ABIS = {
     }
   ],
   LENDING_POOL: [
-  {
+ {
       "type": "constructor",
       "inputs": [
         { "name": "_mUSDC", "type": "address", "internalType": "address" }
@@ -327,6 +327,15 @@ export const ABIS = {
     {
       "type": "function",
       "name": "deposit",
+      "inputs": [
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "fundPool",
       "inputs": [
         { "name": "amount", "type": "uint256", "internalType": "uint256" }
       ],

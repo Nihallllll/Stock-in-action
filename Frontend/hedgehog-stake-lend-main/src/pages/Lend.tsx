@@ -101,8 +101,9 @@ export default function Lend() {
   }
   
   useEffect(() => {
-    
-    setLenderDeposite(Number(lenderBalance));
+    refetchLenderDebt();
+    setLenderDeposite(Number(lenderBalance[1]));
+    console.log("lenderBalance :" , lenderBalance)
   }, [address , lenderBalance])
  
 
@@ -151,7 +152,7 @@ export default function Lend() {
       refetch: refetchavailwithDrawAmount,
     } = useReadContract({
       abi: ABIS.LENDING_POOL,
-      functionName: "lenderDeposits",
+      functionName: "getLenderWithdrawAmount",
       address: CONTRACTS.LENDING_POOL,
       args : [address]
     });
@@ -167,7 +168,7 @@ export default function Lend() {
   const userStats = {
     deposited: lenderDeposite,
     earned: '125.50',
-    availableToWithdraw: availableToWithdraw,
+    availableToWithdraw: availableToWithdraw + lenderDeposite,
     currentAPY: '5.25',
   };
 
@@ -261,7 +262,7 @@ export default function Lend() {
               <p className="text-2xl font-bold text-success">+${userStats.earned}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Available to Withdraw</p>
+              <p className="text-sm text-muted-foreground">Withdraw Amount</p>
               <p className="text-2xl font-bold">${(userStats.availableToWithdraw).toFixed(2)} mUSDC</p>
             </div>
             <div className="text-center">

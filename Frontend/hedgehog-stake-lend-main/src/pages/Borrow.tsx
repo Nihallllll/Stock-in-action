@@ -90,6 +90,7 @@ export default function Borrow() {
   useEffect(() => {
     if (collateralValue !== undefined) {
       setTotalCollateralValue(Number(collateralValue) * 1.25);
+      setCollateralAmount(String(totalCollateralValue));
       // Recalculate max borrow amount here to avoid stale collateralVal
       setMaxBorrowAmount(Number(collateralValue) * maxLTV / 100);
     }
