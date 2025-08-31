@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,12 @@ import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { ABIS, CONTRACTS, SYNTHETIC_STOCKS } from "@/constants/contracts";
 import { Address } from "viem";
 import CollateralCard from "./CollateralCard";
+interface Stock {
+  symbol: string;      // e.g. 'tAAPL'
+  price: number;       // current price
+  prevPrice?: number;  // previous price for calculating change
+  change24h?: number;  // % change since last price update
+}
 
 export default function Borrow() {
   const { stockPrices, userPosition } = useAppStore();
@@ -44,7 +50,7 @@ export default function Borrow() {
   const [userborrowAmount, setUserborrowAmount] = useState<number>(0);
   const [totalCollateralValue, setTotalCollateralValue] = useState<number>(0);
   const [maxBorrowAmount, setMaxBorrowAmount] = useState<number>(0);
-
+  
   // Calculate health factor based on local input values:
   const calculateHealthFactor = () => {
     const collateralVal = parseFloat(collateralAmount) || 0;
@@ -110,6 +116,29 @@ export default function Borrow() {
   // Write contract: deposit collateral
   async function depositAvailableCollateral(amount: string, collateralSymbol: string) {
     if (!address) throw new Error("Wallet not connected");
+
+    // -------------------
+    // Repay the loan 
+    if (collateralSymbol === "mUSDC" ){
+        await writeContract({
+        abi:ABIS.ERC20,
+        functionName:"approve",
+        address : CONTRACTS.MUSDC,
+        account :address,
+        args: [CONTRACTS.MUSDC,BigInt(amount)],
+        chain:undefined
+      })
+
+
+      await writeContract({
+        abi:ABIS.LENDING_POOL,
+        functionName:"repay",
+        address : CONTRACTS.LENDING_POOL,
+        account :address,
+        args: [BigInt(amount)],
+        chain:undefined
+      })
+    }
     const tokenAddress: Address | undefined = SYNTHETIC_STOCKS.find(
       (t) => t.symbol === collateralSymbol
     )?.address;
@@ -169,7 +198,10 @@ export default function Borrow() {
     }
   };
 
-  const handleWithdrawCollateral = async () => {}
+  const handleWithdrawCollateral = async () => {
+
+
+  }
 
   // ------------------------
   // Write contract: borrow amount
