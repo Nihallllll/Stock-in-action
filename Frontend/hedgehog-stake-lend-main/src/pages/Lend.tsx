@@ -102,7 +102,10 @@ export default function Lend() {
   
   useEffect(() => {
     refetchLenderDebt();
-    setLenderDeposite(Number(lenderBalance[1]));
+    if (lenderBalance) {
+      setLenderDeposite(Number(lenderBalance[1]));
+    }
+   
     console.log("lenderBalance :" , lenderBalance)
   }, [address , lenderBalance])
  

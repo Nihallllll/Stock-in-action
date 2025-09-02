@@ -1,11 +1,11 @@
 // Contract addresses and ABIs for Hedgehog DeFi Protocol
 export const CONTRACTS = {
   // Sepolia testnet addresses (mock addresses for demo)
-  LENDING_POOL: '0x062E6C8C2612060Be292e1a1BEaC68954dB58047' as const,
-  COLLATERAL_VAULT: '0x4Af8fDd8920b071Cd4B89c68Bd01261a84A18fCd' as const,
-  ORACLE: '0x57cdfE44DfEa7c1979bc7aE0Ba435B7897a8F5F4' as const,
-  TOKEN_FACTORY: '0xCBD432A477ad6C2fCb53391430Cf661147a0A6df' as const,
-  MUSDC: '0xA2FC12A0bee99Bd9F427088AAB411F86Bb425922' as const,
+  LENDING_POOL: '0x94A342289aA5b41a8Be9b97738B7796e33fCa90b' as const,
+  COLLATERAL_VAULT: '0xa294AB624E4B7FBF1ca5e46E488C18980bcf80d1' as const,
+  ORACLE: '0x83b30cf36Beb2ed5569675fa467A8F494C0113f7' as const,
+  TOKEN_FACTORY: '0x0FB81BDA8e161222e3E030f0D69dcA9d7b65CC00' as const,
+  MUSDC: '0x885318C7C95eB200a24D46eA25cB2F87E3ec2569' as const,
 };
 
 // Simplified ABIs for demo (in production, import from artifacts)
@@ -889,7 +889,7 @@ export const ABIS = {
 ],
   
   ORACLE: [
- { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+{ "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
       "name": "getPrice",
@@ -922,10 +922,14 @@ export const ABIS = {
     },
     {
       "type": "function",
-      "name": "setPrice",
+      "name": "setPrices",
       "inputs": [
-        { "name": "token", "type": "address", "internalType": "address" },
-        { "name": "price", "type": "uint256", "internalType": "uint256" }
+        { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+        {
+          "name": "pricesData",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -977,11 +981,13 @@ export const ABIS = {
   { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
       "type": "function",
-      "name": "createStockToken",
+      "name": "createStockTokens1",
       "inputs": [
-        { "name": "symbol", "type": "string", "internalType": "string" }
+        { "name": "symbols", "type": "string[]", "internalType": "string[]" }
       ],
-      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "outputs": [
+        { "name": "", "type": "address[]", "internalType": "address[]" }
+      ],
       "stateMutability": "nonpayable"
     },
     {

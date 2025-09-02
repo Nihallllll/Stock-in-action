@@ -34,17 +34,16 @@ function AddToken() {
       return;
     }
     try {
-      for (const t of SYNTHETIC_STOCKS){
-        
+     
+        let symbols : string[] = SYNTHETIC_STOCKS.map(t => t.symbol);
         await writeContract({
         abi: ABIS.TOKEN_FACTORY,
-        functionName: "createStockToken",
-        args: [t.symbol],
+        functionName: "createStockTokens1",
+        args: [symbols],
         address: CONTRACTS.TOKEN_FACTORY,
         account: address,
       });  
       alert("hora hai");
-      }
       
     } catch (err) {
       console.error(err);
@@ -282,7 +281,7 @@ function SettokenValue() {
       for(const t of SYNTHETIC_STOCKS){
         await writeContract({
         abi: ABIS.ORACLE,
-        functionName: "setPrice",
+        functionName: "setPrices",
         args: [t.address, BigInt( Number(t.price) * 1e18)],
         address: CONTRACTS.ORACLE,
         account: address,
@@ -396,7 +395,7 @@ function UseTokenAddress({ symbol , addr }: { symbol: string , addr : Address } 
   if (isLoading) return <div>Loading {symbol}...</div>;
   if (error) return <div>Error loading {symbol}</div>;
 
-  return <p>{symbol}: {tokenAddress ?? "Address not found"} = { price}</p>;
+  return <p>{symbol}: {tokenAddress ?? "Address not found"} : {price} </p>;
 }
 
 function UseAllTokens() {

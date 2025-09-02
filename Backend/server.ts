@@ -1,18 +1,22 @@
-require('dotenv').config();
-const express = require('express');
-const http = require('http');
+import express from 'express';
+import http from 'http';
+import dotenv from 'dotenv';
+import mintRoutes from './routes/mint.ts';
+import startServer from './websocket/server.js';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-const mintRoutes = require('./routes/mint');
 app.use('/mint', mintRoutes);
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const server = http.createServer(app);
 
-// Initialize WebSocket server (pass the http server instance)
-require('./websocket/server')(server);
+// Initialize WebSocket server by passing the HTTP server directly (not wrapped in an object)
+startServer(server);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

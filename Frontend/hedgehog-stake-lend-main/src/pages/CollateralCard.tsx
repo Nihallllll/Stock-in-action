@@ -29,57 +29,57 @@ export default function CollateralCard({ stockPrices, handleDeposit, handleWithd
   const [amount, setAmount] = useState("");
   //----------
     //web soket server
-     const [stocks, setStocks] = useState<Stock[]>([]);
-      const wsRef = useRef<WebSocket | null>(null);
-    
-      useEffect(() => {
-        wsRef.current = new WebSocket('ws://localhost:3000'); // Update URL if needed
-    
-        wsRef.current.onopen = () => {
-          console.log('Connected to WS server');
-        };
-    
-        wsRef.current.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'price_update' && Array.isArray(data.stocks)) {
-              setStocks((prevStocks) => {
-                // Create a map of previous prices for efficient lookup
-                const prevPricesMap = new Map(prevStocks.map(s => [s.symbol, s.price]));
-    
-                // Map incoming stocks and calculate change based on prevPricesMap
-                const updatedStocks = data.stocks.map((stock: any) => {
-                  const prevPrice = prevPricesMap.get(stock.symbol) ?? stock.price;
-                  const price = parseFloat(stock.price);
-                  const change24h = prevPrice === 0 ? 0 : ((price - prevPrice) / prevPrice) * 100;
-                  return {
-                    symbol: stock.symbol,
-                    price,
-                    prevPrice,
-                    change24h: parseFloat(change24h.toFixed(2)),
-                  };
-                });
-    
-                return updatedStocks;
-              });
-            }
-          } catch (e) {
-            console.error('Invalid WS data:', e);
-          }
-        };
-    
-        wsRef.current.onerror = (err) => {
-          console.error('WS error', err);
-        };
-    
-        wsRef.current.onclose = () => {
-          console.log('WS connection closed');
-        };
-    
-        return () => {
-          wsRef.current?.close();
-        };
-      }, []);
+       const [stocks, setStocks] = useState<Stock[]>([]);
+       const wsRef = useRef<WebSocket | null>(null);
+     
+       useEffect(() => {
+         wsRef.current = new WebSocket('ws://localhost:3000'); // Update URL if needed
+     
+         wsRef.current.onopen = () => {
+           console.log('Connected to WS server');
+         };
+     
+         wsRef.current.onmessage = (event) => {
+           try {
+             const data = JSON.parse(event.data);
+             if (data.type === 'price_update' && Array.isArray(data.stocks)) {
+               setStocks((prevStocks) => {
+                 // Create a map of previous prices for efficient lookup
+                 const prevPricesMap = new Map(prevStocks.map(s => [s.symbol, s.price]));
+     
+                 // Map incoming stocks and calculate change based on prevPricesMap
+                 const updatedStocks = data.stocks.map((stock: any) => {
+                   const prevPrice = prevPricesMap.get(stock.symbol) ?? stock.price;
+                   const price = parseFloat(stock.price);
+                   const change24h = prevPrice === 0 ? 0 : ((price - prevPrice) / prevPrice) * 100;
+                   return {
+                     symbol: stock.symbol,
+                     price,
+                     prevPrice,
+                     change24h: parseFloat(change24h.toFixed(2)),
+                   };
+                 });
+     
+                 return updatedStocks;
+               });
+             }
+           } catch (e) {
+             console.error('Invalid WS data:', e);
+           }
+         };
+     
+         wsRef.current.onerror = (err) => {
+           console.error('WS error', err);
+         };
+     
+         wsRef.current.onclose = () => {
+           console.log('WS connection closed');
+         };
+     
+         return () => {
+           wsRef.current?.close();
+         };
+       }, []);
   const isDeposit = mode === "deposit";
 
   return (
@@ -111,7 +111,7 @@ export default function CollateralCard({ stockPrices, handleDeposit, handleWithd
               <SelectValue placeholder="Select synthetic stock..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="mUSDC">mUSDC - Repay the loan</SelectItem>
+              { isDeposit ? <SelectItem value="mUSDC">mUSDC - Repay the loan</SelectItem> : null}
               {stocks.map((stock) => (
                 <SelectItem key={stock.symbol} value={stock.symbol}>
                   <div className="flex items-center space-x-2">

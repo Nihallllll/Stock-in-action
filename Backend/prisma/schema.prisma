@@ -15,15 +15,23 @@ datasource db {
 }
 
 model User {
-  id   Int  @id @default(autoincrement())
-  address  String @unique
-  mintedTokens  MintedToken[] 
+  id           Int           @id @default(autoincrement())
+  address      String        @unique
+  mintedTokens MintedToken[] 
+  status       Status        @default(Good)
+}
+
+enum Status {
+  Good 
+  Bad 
 }
 
 model MintedToken {
-  id  Int  @id @default(autoincrement())
-  user  User  @relation(fields: [userId], references: [id])
-  userId  Int
-  symbol  String
-  amount  BigInt
+  id         Int    @id @default(autoincrement())
+  user       User   @relation(fields: [userId], references: [id])
+  userId     Int 
+  tokenAddress String  
+  symbol     String
+  amount     BigInt
+  boughtAt   BigInt @default(0) 
 }
