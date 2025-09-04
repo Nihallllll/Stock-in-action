@@ -79,7 +79,7 @@ contract CollateralVault is ReentrancyGuard, Ownable {
 
     function getCollateralValue(address user) public view returns (uint256) {
         uint256 total = 0;
-        address[] memory toks = userTokens[user];
+        address[] memory toks = userTokens[user];   
 
         for (uint256 i = 0; i < toks.length; i++) {
             address t = toks[i];

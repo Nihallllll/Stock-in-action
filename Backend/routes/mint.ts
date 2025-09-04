@@ -15,7 +15,7 @@ router.post("/depositCol", async (req, res) => {
   }
   try {
     //const tx = await depositCollateral(tokenAddress, amount);
-
+    //logic for checking the deposite succeeded or not
     let user = await prisma.user.findUnique({
       where: { address: userAddress },
     });

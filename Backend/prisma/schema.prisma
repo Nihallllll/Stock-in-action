@@ -19,6 +19,7 @@ model User {
   address      String        @unique
   mintedTokens MintedToken[] 
   status       Status        @default(Good)
+  lastprocessedblock BigInt   @default(0)
 }
 
 enum Status {
