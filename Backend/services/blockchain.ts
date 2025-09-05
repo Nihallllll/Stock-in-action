@@ -43,15 +43,21 @@ export async function depositCollateral(tokenAddress: string, amount: string | n
   return tx;
 }
 
-export async function withdrawCollateral(tokenAddress: string, amount: string | number | bigint) {
-  if (!collateral) await initContracts();
+export async function repay( amount: string | number | bigint) {
+  if (!lendingPool) await initContracts();
 
-  const tx = await collateral.withdrawCollateral(tokenAddress, BigInt(amount));
+  const tx = await lendingPool.repay( BigInt(amount));
   await tx.wait();
 
   return tx;
 }
+export async function withDrawCollateral(tokenAddress: string, amount: string | number | bigint) {
+  if (!collateral) await initContracts();
+  const tx  = await collateral.withdrawCollateral(tokenAddress, BigInt(amount));
+  await tx.wait();
 
+  return tx;
+}
 export async function borrowmUSDC(amount: string | number | bigint) {
   if (!lendingPool) await initContracts();
 

@@ -1,53 +1,29 @@
 import express from "express";
 import {
   depositCollateral,
-  withdrawCollateral,
+  repay,
 } from "../services/blockchain.ts";
 import { prisma } from "../services/prisma.ts";
-import { Status } from "@prisma/client";
+
 
 const router = express.Router();
 
 router.post("/depositCol", async (req, res) => {
-  const { userAddress, tokenAddress, amount, symbol, boughtAt } = req.body;
+   const { userAddress, tokenAddress, amount } = req.body;
   if (!userAddress || !tokenAddress || !amount) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   try {
-    //const tx = await depositCollateral(tokenAddress, amount);
-    //logic for checking the deposite succeeded or not
-    let user = await prisma.user.findUnique({
-      where: { address: userAddress },
-    });
-    if (!user) {
-      user = await prisma.user.create({
-        data: { address: userAddress, status: "Good" },
-      });
-    }
+    // send tx to chain
+    const tx = await depositCollateral(tokenAddress, amount);
+    await tx.wait();
 
-    const mintedToken = await prisma.mintedToken.create({
-      data: {
-        userId: user.id,
-        symbol,
-        amount: BigInt(amount),
-        boughtAt: BigInt(boughtAt),
-        tokenAddress: tokenAddress,
-      },
-    });
-
-    // res.json({ success: true, txHash: tx.hash });
+    // do NOT write to DB here — indexer will handle it
     res.json({
       success: true,
-      message: "Collateral deposited (DB only)",
-      user: {
-        ...user,
-        id: user.id.toString(), // if BigInt
-      },
-      mintedToken: {
-        ...mintedToken,
-        amount: mintedToken.amount.toString(),
-        boughtAt: mintedToken.boughtAt.toString(),
-      },
+      message: "Collateral deposit tx sent",
+      txHash: tx.hash,
     });
   } catch (error: any) {
     console.error(error);
@@ -55,31 +31,21 @@ router.post("/depositCol", async (req, res) => {
   }
 });
 
-router.post("/withdraw", async (req, res) => {
-  const { userAddress, tokenAddress, amount, symbol, boughtAt } = req.body;
+router.post("/repay", async (req, res) => {
+  const { userAddress, tokenAddress, amount } = req.body;
   if (!userAddress || !tokenAddress || !amount) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   try {
-    const tx = await withdrawCollateral(tokenAddress, amount);
+    const tx = await repay(amount);
+    await tx.wait();
 
-    let user = await prisma.user.findUnique({
-      where: { address: userAddress },
+    res.json({
+      success: true,
+      message: "Collateral withdraw tx sent",
+      txHash: tx.hash,
     });
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    await prisma.mintedToken.updateMany({
-      where: { userId: user.id, symbol },
-      data: {
-        boughtAt: BigInt(boughtAt),
-        tokenAddress,
-        amount: { decrement: BigInt(amount) },
-      },
-    });
-
-    res.json({ success: true, txHash: tx.hash });
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ error: error.message || "Withdrawal failed" });

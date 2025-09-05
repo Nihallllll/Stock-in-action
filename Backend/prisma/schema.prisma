@@ -15,24 +15,47 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  address      String        @unique
-  mintedTokens MintedToken[] 
-  status       Status        @default(Good)
-  lastprocessedblock BigInt   @default(0)
-}
+  id                 Int              @id @default(autoincrement())
+  address            String           @unique
+  status             String?         
+  lastProcessedBlock BigInt?
 
-enum Status {
-  Good 
-  Bad 
+  // Relations
+  collaterals        MintedToken[]
+  borrows            BorrowedToken[]
+  deposits           DepositedToken[]
 }
 
 model MintedToken {
-  id         Int    @id @default(autoincrement())
-  user       User   @relation(fields: [userId], references: [id])
-  userId     Int 
-  tokenAddress String  
-  symbol     String
-  amount     BigInt
-  boughtAt   BigInt @default(0) 
+  id           Int    @id @default(autoincrement())
+  userId       Int
+  tokenAddress String
+  amount       BigInt @default(0) // balance tracked internally (minted token balance)
+  locked       BigInt @default(0) // portion locked against borrow
+
+  user         User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tokenAddress])
+}
+
+model BorrowedToken {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  token    String     //mainly mUSDC
+  amount   BigInt @default(0) // loan balance
+
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, token])
+}
+
+model DepositedToken {
+  id           Int    @id @default(autoincrement())
+  userId       Int
+  tokenAddress String
+  amount       BigInt @default(0) // total deposited collateral tokens
+  
+  user         User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tokenAddress])
 }
