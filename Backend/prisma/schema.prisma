@@ -56,6 +56,6 @@ model DepositedToken {
   amount       BigInt @default(0) // total deposited collateral tokens
   
   user         User   @relation(fields: [userId], references: [id])
-
+  boughtAt     BigInt
   @@unique([userId, tokenAddress])
 }
