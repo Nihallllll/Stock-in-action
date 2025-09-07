@@ -32,7 +32,7 @@ model MintedToken {
   tokenAddress String
   amount       BigInt @default(0) // balance tracked internally (minted token balance)
   locked       BigInt @default(0) // portion locked against borrow
-
+  symbol       String
   user         User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, tokenAddress])
@@ -54,7 +54,7 @@ model DepositedToken {
   userId       Int
   tokenAddress String
   amount       BigInt @default(0) // total deposited collateral tokens
-  
+  symbol       String
   user         User   @relation(fields: [userId], references: [id])
   boughtAt     BigInt
   @@unique([userId, tokenAddress])

@@ -1,15 +1,39 @@
-import {PrismaClient} from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 
-const prisma = new PrismaClient;
-const allUsers = [];
-async function getinfo(){
-const users = await prisma.user.findMany({
-    where : {
-        deposits :{
-            some: {}
-        }
-    }
-})  
+dotenv.config();
+const prisma = new PrismaClient();
 
+export async function getUserHoldings() {
+  // Fetch users with deposits
+  const users = await prisma.user.findMany({
+    where: {
+      deposits: {
+        some: {}, // ensures only users who actually have deposits
+      },
+    },
+    select: {
+      address: true,
+      deposits: {
+        select: {
+          tokenAddress: true,
+          boughtAt: true,
+          symbol : true
+        },
+      },
+    },
+  });
+
+  // Reshape the result into the structure you wanted
+  const userHoldings: { [address: string]: { symbol : string; token: string; boughtPrice: bigint }[] } = {};
+
+  users.forEach((user) => {
+    userHoldings[user.address] = user.deposits.map((deposit) => ({
+      token: deposit.tokenAddress,
+      boughtPrice: deposit.boughtAt,
+      symbol : deposit.symbol
+    }));
+  });
+
+  return userHoldings;
 }
