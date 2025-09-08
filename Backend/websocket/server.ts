@@ -50,7 +50,7 @@ export default function startServer(server: any) {
     broadcastPrices();
   }, 10000);
 
-  wss.on("connection", (ws: WebSocket) => {
+    wss.on("connection", (ws: WebSocket) => {
     console.log("Client connected");
 
     const initialStocks = trackedSymbols.map((sym: string) => ({

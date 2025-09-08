@@ -24,7 +24,7 @@ export async function getUserHoldings() {
     },
   });
 
-  // Reshape the result into the structure you wanted
+  
   const userHoldings: { [address: string]: { symbol : string; token: string; boughtPrice: bigint }[] } = {};
 
   users.forEach((user) => {
