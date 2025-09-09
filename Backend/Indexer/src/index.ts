@@ -32,7 +32,11 @@ const upsertUser = async (address: string, blockNumber: number) => {
   return prisma.user.upsert({
     where: { address },
     update: { lastProcessedBlock: BigInt(blockNumber) },
-    create: { address, status: "Good", lastProcessedBlock: BigInt(blockNumber) },
+    create: {
+      address,
+      status: "Good",
+      lastProcessedBlock: BigInt(blockNumber),
+    },
   });
 };
 
@@ -92,7 +96,8 @@ const processCollateralLogs = async (
   toBlock: number,
   eventType: "Deposit" | "Withdraw"
 ) => {
-  const eventName = eventType === "Deposit" ? "CollateralDeposited" : "CollateralWithdrawn";
+  const eventName =
+    eventType === "Deposit" ? "CollateralDeposited" : "CollateralWithdrawn";
   const logs = await provider.getLogs({
     ...collateralVault.filters[eventName]!(null, null, null),
     fromBlock,
@@ -110,9 +115,17 @@ const processCollateralLogs = async (
 
       if (eventType === "Deposit") {
         await prisma.depositedToken.upsert({
-          where: { userId_tokenAddress: { userId: user.id, tokenAddress: token } },
+          where: {
+            userId_tokenAddress: { userId: user.id, tokenAddress: token },
+          },
           update: { amount: { increment: amount } },
-          create: { userId: user.id, tokenAddress: token, amount },
+          create: {
+            userId: user.id,
+            tokenAddress: token,
+            amount: amount,
+            symbol: parsed!.args.symbol ?? "UNKNOWN", // adjust based on your event
+            boughtAt: BigInt(log.blockNumber), // or another source of price/time
+          },
         });
       } else {
         await prisma.depositedToken.updateMany({
@@ -147,10 +160,6 @@ const startIndexer = async () => {
 };
 
 startIndexer();
-
-
-
-
 
 // import { PrismaClient } from "@prisma/client";
 // import dotenv from "dotenv";

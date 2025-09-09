@@ -19,3 +19,4 @@ export async function fetchStockPrices(): Promise<void> {
     console.error('Finnhub API error:', err.message);
   }
 }
+  
