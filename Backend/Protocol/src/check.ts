@@ -63,8 +63,7 @@ export async function check() {
         return;
       }
 
-      const calc =
-        (currentStock.price * Number(d.amount)) / Number(debtUSDC);
+      const calc = (currentStock.price * Number(d.amount)) / Number(debtUSDC);
 
       console.log(
         `User ${address}, token ${d.symbol}, health factor calc:`,

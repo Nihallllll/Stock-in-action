@@ -19,7 +19,7 @@ model User {
   address            String           @unique
   status             String?         
   lastProcessedBlock BigInt?
-
+  hf                 Float?
   // Relations
   collaterals        MintedToken[]
   borrows            BorrowedToken[]
