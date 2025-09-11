@@ -1,14 +1,14 @@
 // check.ts
 import WebSocket from "ws";
 import { getUserHoldings } from "./index.js";
-
+import { PrismaClient } from "@prisma/client";
 interface Stock {
   symbol: string;
   price: number;
   prevPrice?: number;
   change24h?: number;
 }
-
+const prisma  = new PrismaClient();
 const stocks: Stock[] = [];
 
 export async function wsLogic() {
@@ -65,10 +65,20 @@ export async function check() {
 
       const calc = (currentStock.price * Number(d.amount)) / Number(debtUSDC);
 
-      console.log(
-        `User ${address}, token ${d.symbol}, health factor calc:`,
-        calc
-      );
+      prisma.user.update({
+        where :{
+          address :address
+        },
+        data :{
+          hf: calc
+        }
+      })
+
+      if(calc < 1) {
+
+      }
     });
   }
 }
+
+async function liquidate(address : string ,debt : number , )
