@@ -2,6 +2,9 @@
 import WebSocket from "ws";
 import { getUserHoldings } from "./index.js";
 import { PrismaClient } from "@prisma/client";
+import { id, type AddressLike } from "ethers";
+import type { Address } from "cluster";
+import { userInfo } from "os";
 interface Stock {
   symbol: string;
   price: number;
@@ -74,11 +77,43 @@ export async function check() {
         }
       })
 
-      if(calc < 1) {
+      const userId  = prisma.user.findFirst({
+        where :{
+          address : address
+        },
+        select : {
+          id :true
+        }
+      }); 
+      const tokenAdd = prisma.depositedToken.findFirst({
+        where : {
+          symbol : d.symbol
+        },
+        select :{
+          tokenAddress : true
+        }
+      })
 
+      if(calc < 1) {
+          liquidate(Number(userId) , Number(debtUSDC ), BigInt(currentStock.price) , d.amount ,String(tokenAdd) )
       }
     });
   }
 }
 
-async function liquidate(address : string ,debt : number , )
+async function liquidate(userId : number ,debt : number , price : BigInt , userCollateral : bigint ,userId_tokenAddress : string){
+  const collatralToSeize = debt / Number(price)  > Number(userCollateral) ? userCollateral : debt / Number(price);
+  const finalAmount = collatralToSeize < userCollateral ?  userCollateral  - BigInt(collatralToSeize) : 0;
+  prisma.depositedToken.update({
+    where: {
+      userId_tokenAddress: {
+        userId: userId,
+        tokenAddress: userId_tokenAddress
+      }
+    },
+    data : {
+      amount : finalAmount
+    }
+
+  })
+}
